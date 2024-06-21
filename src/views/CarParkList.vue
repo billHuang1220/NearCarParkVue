@@ -1,41 +1,44 @@
 <template>
-      <input type="text" v-model="searchQuery" placeholder="Search by ID or Name" class="search-bar" />
-  <table class="my-table">
-    <thead>
-      <tr>
-        <th>CP_ID</th>
-        <th>Name</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="row in filteredRows" :key="row.cp_ID">
-        <td>{{ row.cp_ID }}</td>
-        <td>{{ row.nameC }}</td>
-        <td>
-          <button :class="{ active: row.hasCarSlot }" class="car-button" @click="openDatepicker(row,'car')">
-            <img src="../assets/car.png" alt="Car" class="button-icon">
-          </button>
-      
-          <button :class="{ active: row.hasMBSlot }" class="mb-button"  @click="openDatepicker(row,'mb')">
-            <img src="../assets/motorCycle.png" alt="Motor Bike" class="button-icon">
-          </button>
+  <input type="text" v-model="searchQuery" placeholder="Search by ID or Name" class="search-bar" />
+  <div id="app">
 
-          <VueDatePicker v-model="selectedDate" 
-            :enable-time-picker="false"
-       
-            :disabled-dates="disableDates"
-            inline 
-            auto-apply
-            v-if="selectedCpID === row.cp_ID" 
-            @closed="closeDatepicker">
-          </VueDatePicker>
-          <button v-if="selectedCpID === row.cp_ID" @click="sumbitDate()" class="submit-button">Submit</button>
-          <button v-if="selectedCpID === row.cp_ID" @click="closeDatepicker()" class="cancel-button">Cancel</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="my-table">
+      <thead>
+        <tr>
+          <th>CP_ID</th>
+          <th>Name</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in displayedRows" :key="row.cp_ID">
+          <td>{{ row.cp_ID }}</td>
+          <td>{{ row.nameC }}</td>
+          <td>
+            <button :class="{ active: row.hasCarSlot }" class="car-button" @click="openDatepicker(row, 'car')">
+              <img src="../assets/car.png" alt="Car" class="button-icon">
+            </button>
+
+            <button :class="{ active: row.hasMBSlot }" class="mb-button" @click="openDatepicker(row, 'mb')">
+              <img src="../assets/motorCycle.png" alt="Motor Bike" class="button-icon">
+            </button>
+
+            <VueDatePicker v-model="selectedDate" :enable-time-picker="false" :disabled-dates="disableDates" inline
+              auto-apply v-if="selectedCpID === row.cp_ID" @closed="closeDatepicker">
+            </VueDatePicker>
+            <button v-if="selectedCpID === row.cp_ID" @click="sumbitDate()" class="submit-button">Submit</button>
+            <button v-if="selectedCpID === row.cp_ID" @click="closeDatepicker()" class="cancel-button">Cancel</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+    <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+    <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+  </div>
+
+  </div>
+
 </template>
 
 <script>
@@ -50,8 +53,10 @@ export default {
       rows: [],
       selectedCpID: '',
       selectedDate: '',
-      availableDate:[],
+      availableDate: [],
       searchQuery: '',
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
 
@@ -67,6 +72,24 @@ export default {
         return row.cp_ID.toLowerCase().includes(query) || row.nameC.toLowerCase().includes(query);
       });
     },
+
+    totalPages() {
+      // Calculate the total number of pages based on the itemsPerPage value
+      return Math.ceil(this.filteredRows.length / this.itemsPerPage);
+    },
+    displayedRows() {
+
+      if(this.currentPage == -1){
+        return this.filteredRows
+      }
+
+      // Calculate the range of rows to display based on the currentPage and itemsPerPage values
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = this.currentPage * this.itemsPerPage;
+
+      // Return the portion of filteredRows array for the current page
+      return this.filteredRows.slice(startIndex, endIndex);
+    }
   },
   methods: {
     fetchCarParkList() {
@@ -79,7 +102,7 @@ export default {
           console.error('Error fetching data:', error);
         });
     },
-    fetchDate(){
+    fetchDate() {
       axios.get('https://localhost:7155/GetAvailableDate')
         .then(response => {
           this.availableDate = response.data;
@@ -99,21 +122,34 @@ export default {
       this.selectedCpID = '';
       this.selectedDate = '';
       store.type = '';
-      store.cp_ID='';
-      store.picked_date='';
+      store.cp_ID = '';
+      store.picked_date = '';
     },
     sumbitDate() {
       store.cp_ID = this.selectedCpID;
       store.picked_date = `${String(this.selectedDate.getMonth() + 1).padStart(2, '0')}${String(this.selectedDate.getDate()).padStart(2, '0')}`;
       window.location.hash = '#/history';
     },
-  
-    disableDates(date) {    
+
+    disableDates(date) {
       const options = { month: "2-digit", day: "2-digit", timeZone: "Asia/Shanghai" };
       const formattedDate = date.toLocaleDateString("en-US", options);
       const result = formattedDate.replace(/\//g, '');
       return !this.availableDate.includes(result);
     },
+
+    goToPage(page) {
+    // Update the currentPage value when a page button is clicked
+    this.currentPage = page;
+  },
+  prevPage() {
+    // Move to the previous page
+    this.currentPage--;
+  },
+  nextPage() {
+    // Move to the next page
+    this.currentPage++;
+  }
   },
 };
 </script>
@@ -184,4 +220,24 @@ export default {
   width: 100%;
   box-sizing: border-box;
 }
-</style>     
+.pagination {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pagination button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background-color: #ccc;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+}
+</style>

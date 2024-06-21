@@ -35,8 +35,8 @@ const currentView = computed(() => {
         <li class="nav-item"><a class="nav-link" href="#/">CarParkNearMe</a></li>
         <li class="nav-item"><a class="nav-link" href="#/cpList">CarPark List</a></li>
         <li class="nav-item"><a class="nav-link" href="#/routeMap">RoutingMap</a></li>
-        <li class="nav-item"><a class="nav-link" href="#/location">UpLoad</a></li>
-        <li class="nav-item"><a class="nav-link" href="#/crud">CRUDLocation</a></li>
+        <li class="nav-item"><a class="nav-link" href="#/crud">UpdateLocation</a></li>
+        <li class="nav-item"><a class="nav-link" href="#/location">Upload</a></li>
 
       </ul>
     </nav>

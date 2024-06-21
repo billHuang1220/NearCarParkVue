@@ -1,7 +1,8 @@
 <template>
   <div class="autocomplete-container">
-    <AutoComplete v-model="value" :suggestions="items" :optionLabel="getLabel" @complete="searchLocation"
-      @keydown.down="selectNextItem" @keydown.up="selectPreviousItem" class="custom-autocomplete" />
+
+    <AutoComplete v-model="value" :suggestions="items" :optionLabel="getLabel" @complete="searchLocation" />
+
     <button class="insert-button" @click="insert">Insert</button>
   </div>
   <div class="routerList-container">
@@ -11,7 +12,7 @@
         <tr>
           <th>Name (CN)</th>
           <th>Name (EN)</th>
-          <th  class="column-width-20">Action</th>
+          <th class="column-width-20">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -20,11 +21,11 @@
         </tr>
         <tr v-for="(point, index) in waypoints" :key="point.name">
           <td>{{ point.nameCN }}</td>
-          <td>{{ point.namePT }}</td>
+          <td>{{ point.nameEN }}</td>
 
           <td>
-            <div class = "btn-row">
-              <button @click="remove(index)" class="table-btn" >
+            <div class="btn-row">
+              <button @click="remove(index)" class="table-btn">
                 <img src="../assets/trash.png" alt="Car" class="button-icon">
               </button>
               <button @click="moveUp(index)" :disabled="index === 0" class="table-btn">
@@ -108,8 +109,12 @@ export default {
         const response = await axios.get(
           `https://localhost:7155/AutoComplete?prefix=${this.value}`
         );
-        this.items = response.data;
-        console.log(this.items);
+        if (typeof (response.data) == "object") {
+          this.items = response.data;
+
+        } else {
+          console.log(response.data);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -121,29 +126,14 @@ export default {
 
     },
     getLabel(item) {
-      return item.nameCN + " (" + item.namePT + ")";
+      return (item.nameCN && item.nameEN) ? item.nameCN + " (" + item.nameEN + ")" : item;
     },
 
-    selectNextItem() {
-      if (this.selectedItemIndex < this.items.length - 1) {
-        this.selectedItemIndex++;
-      }
-    },
 
-    selectPreviousItem() {
-      if (this.selectedItemIndex > 0) {
-        this.selectedItemIndex--;
-      }
-    },
-
-    debouncedSearchLocation() {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = setTimeout(this.searchLocation, 500); // 0.5 second delay
-    },
     insert() {
 
       if (this.value) {
-        const isDuplicate = this.waypoints.some((point) => point.id == this.value.id);
+        const isDuplicate = this.waypoints.some((point) => point.nameCN == this.value.nameCN);
 
         if (isDuplicate) {
           alert("Waypoint already exists!");
@@ -204,14 +194,15 @@ body,
   width: 25px;
   height: 25px;
 }
+
 .button-icon {
   width: 25px;
   height: 25px;
 }
 
-.btn-row{
+.btn-row {
   display: flex;
-  justify-content:space-evenly;
+  justify-content: space-evenly;
 }
 
 .table-btn {

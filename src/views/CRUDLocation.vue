@@ -6,7 +6,8 @@
         <h1>Search Location</h1>
         <div class="autocomplete-container">
             <AutoComplete v-model="value" :suggestions="items" :optionLabel="getLabel" @complete="searchLocation"
-                @keydown.down="selectNextItem" @keydown.up="selectPreviousItem" class="custom-autocomplete" placeholder="Search by Name"/>
+                @keydown.down="selectNextItem" @keydown.up="selectPreviousItem" class="custom-autocomplete"
+                placeholder="Search by Name" />
             <button class="select-button" @click="select">Select</button>
 
         </div>
@@ -28,19 +29,19 @@
                     <tr>
                         <td>Name (EN)</td>
                         <td>
-                            <input type="text" v-model="location.namePT" class="input-field" />
+                            <input type="text" v-model="location.nameEN" class="input-field" />
                         </td>
                     </tr>
                     <tr>
                         <td>Latitude</td>
                         <td>
-                            <vue-number-input type="text" v-model="location.lat" inline/>
+                            <vue-number-input type="text" v-model="location.lat" inline />
                         </td>
                     </tr>
                     <tr>
                         <td>Longitude</td>
                         <td>
-                            <vue-number-input type="text" v-model="location.lng" inline/>
+                            <vue-number-input type="text" v-model="location.lng" inline />
                         </td>
                     </tr>
                 </tbody>
@@ -80,7 +81,6 @@ const tempLocation = {
     namePT: '',
     lat: '',
     lng: '',
-    id: null
 
 };
 export default {
@@ -104,7 +104,12 @@ export default {
                 const response = await axios.get(
                     `https://localhost:7155/AutoComplete?prefix=${this.value}`
                 );
-                this.items = response.data;
+                if (typeof (response.data) == "object") {
+                    this.items = response.data;
+
+                } else {
+                    console.log(response.data);
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -113,18 +118,15 @@ export default {
 
         reset() {
             this.value = '',
-            this.location.nameCN = '';
+                this.location.nameCN = '';
             this.location.namePT = '';
             this.location.lat = '';
             this.location.lng = '';
-            this.location.id = '';
         },
 
 
         insert() {
             var properties = Object.keys(this.location);
-            properties = properties.filter(x=>x!= "id");
-            console.log(properties);
             const nullProperties = properties.filter(
                 (property) => this.location[property] === ''
             );
@@ -134,17 +136,17 @@ export default {
             } else {
                 var loc = [{
                     nameCN: this.location.nameCN,
-                    nameEN: this.location.namePT,
+                    nameEN: this.location.nameEN,
                     lat: this.location.lat,
                     lng: this.location.lng
                 }];
 
                 axios.post("https://localhost:7155/InsertLocation", loc)
                     .then(res => {
-                        if(res.data == true){
+                        if (res.data == true) {
                             alert("Successfully insert location!");
                             this.location = tempLocation;
-                        }else{
+                        } else {
                             alert(res.data);
                         }
                     });
@@ -199,7 +201,7 @@ export default {
         },
 
         getLabel(item) {
-            return item.nameCN + " (" + item.namePT + ")";
+            return (item.nameCN && item.nameEN) ? item.nameCN + " (" + item.nameEN + ")" : item;
         },
 
         selectNextItem() {
@@ -252,7 +254,7 @@ export default {
     cursor: pointer;
 }
 
-.select-button  {
+.select-button {
     margin-left: 5px;
     padding: 8px 16px;
     background-color: #007bff;
@@ -291,19 +293,19 @@ export default {
 }
 
 .input-field {
-  -moz-appearance: textfield;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: .25rem;
-  display: block;
-  font-size: 1rem;
-  line-height: 1.5;
-  max-width: 100%;
-  min-height: 1.5rem;
-  min-width: 3rem;
-  padding: .4375rem .875rem;
-  transition: border-color .15s;
-  width: 100%;
+    -moz-appearance: textfield;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: .25rem;
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 100%;
+    min-height: 1.5rem;
+    min-width: 3rem;
+    padding: .4375rem .875rem;
+    transition: border-color .15s;
+    width: 100%;
 }
 
 
